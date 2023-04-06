@@ -11,9 +11,11 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
+
 
 func LoadKey() string {
 	envError := godotenv.Load()
@@ -84,7 +86,7 @@ func Login(c *fiber.Ctx) error {
 
 	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Hour * 10))
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    user.Id.String(),
+		Issuer:    user.Id.Hex(),
 		ExpiresAt: expiresAt,
 	})
 
@@ -128,12 +130,18 @@ func GetUser(c *fiber.Ctx) error {
 
 	claims := token.Claims.(*jwt.RegisteredClaims)
 
+	id, err := primitive.ObjectIDFromHex(claims.Issuer)
+
+	if err != nil {
+		return err
+	}
+
 	var user schemas.User
 
-	filter := bson.M{"_id": claims.Issuer}
+	filter := bson.M{"_id": id}
 
 	if userNotFound := userCollection.FindOne(ctx, filter).Decode(&user); userNotFound != nil {
-	  return userNotFound
+		return userNotFound
 	}
 
 	return c.JSON(user)
