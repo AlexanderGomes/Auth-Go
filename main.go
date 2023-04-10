@@ -1,8 +1,8 @@
 package main
 
 import (
-	"auth-go/database"
-	"auth-go/routes"
+	"auth-go/backend/database"
+	"auth-go/backend/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )

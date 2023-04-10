@@ -1,12 +1,13 @@
 package controllers
 
 import (
-	"auth-go/database"
-	"auth-go/schemas"
+	"auth-go/backend/database"
+	"auth-go/backend/schemas"
 	"context"
 	"log"
 	"os"
 	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
@@ -15,7 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
-
 
 func LoadKey() string {
 	envError := godotenv.Load()
@@ -49,7 +49,7 @@ func Register(c *fiber.Ctx) error {
 		Password: string(password),
 	}
 
-	result, _ := userCollection.InsertOne(ctx, user)
+	result, _ := userCollection.InsertOne(ctx, &user)
 
 	return c.JSON(result)
 }
@@ -104,6 +104,7 @@ func Login(c *fiber.Ctx) error {
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 24),
 		HTTPOnly: true,
+		Secure:   true,
 	}
 
 	c.Cookie(&cookie)
@@ -145,4 +146,19 @@ func GetUser(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(user)
+}
+
+func Logout(c *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
+
+	return c.JSON(fiber.Map{
+		"message": "success",
+	})
 }
